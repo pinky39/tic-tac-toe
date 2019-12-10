@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tic-Tac-Toe</title>
+<meta charset="utf-8" />
+
+<style>
+  * {
+    margin: 0;    
+  }
+  
+  html {
+    background-color: #222;
+  
+  }
+  
+  body {    
+    font-family: arial, sans-serif;    
+  }    
+     
+  .next {
+    font-weight: bold;                
+    border-bottom: 2px solid #e4ff00;
+  } 
+  
+  #finished {
+    display:none;
+  }
+  
+  #finished.show  {
+    display: block;
+    position: absolute;
+    top:0px;
+    bottom: 0px;
+    left:0px;
+    right:0px;
+    background-color: #000;    
+    opacity: 0.8;
+    z-index: 5;    
+  }
+  
+  #finished p {
+    position: absolute;
+    top: 50%;    
+    text-align: center;
+    width: 100%;    
+    color: #ccc;
+    font-size: 5em;
+    margin-top: -2em;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  #stats {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;    
+    margin-left: -75px;
+    background-color: #333;
+    border: 3px solid #444;
+    padding: 20px;
+    font-size:1.5em;
+    width: 150px;
+  }
+  
+  #wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top:-350px;
+    margin-left:-300px;
+  }
+  
+  #board {
+    font-family: lucida console, courier, monospace;
+    font-size: 4em;    
+    line-height: 3em;
+    cursor: pointer;
+    width:  600px;        
+    border: 3px solid #444;
+    border-collapse: collapse;    
+  }
+  
+  #board td {    
+    width: 33%;
+    text-align: center;    
+    border: 3px solid #444;
+  }
+  
+  #board td:hover {
+    background-color: #333;
+  }
+  
+  .score {
+    padding-left: 10px;
+  }    
+  
+  #xPlayer {
+    float: left;
+    color: #ffba00;
+  }
+  
+  #oPlayer {
+    float:right;
+    color: #ff4e00;    
+  }      
+  
+  td.x::after {
+    content: 'X';
+    color: #ffba00;
+  }
+  
+  td.o::after {
+    content: 'O';
+    color: #ff4e00;
+  }
+  
+  td.none::after {
+    content: ':)';
+    color: #aaa;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div id="finished">  
+</div>
+
+<div id="stats">  
+  <p id="xPlayer">X: <span class="score"/></p>
+  <p id="oPlayer">O: <span class="score"/></p>
+</div>
+  
+<div id="wrapper">
+  <table id="board">
+    <tbody>
+      <tr>
+        <td id="c00"></td>
+        <td id="c01"></td>
+        <td id="c02"></td>      
+      </tr>
+      <tr>
+        <td id="c10"></td>
+        <td id="c11"></td>
+        <td id="c12"></td>      
+      </tr>
+      <tr>
+        <td id="c20"></td>
+        <td id="c21"></td>
+        <td id="c22"></td>            
+      </tr>
+    </tbody>  
+  </table>
+</div>
+
+<script type="text/javascript">
+  (function() {              
+      
+      var human = 'x';
+      var cpu = 'o';
+      
+      var score = {};               
+      var board;      
+      var startingPlayer;
+                 
+      function iterateBoard(action) {
+        var r, c;                 
+        for (r = 0; r < 3; r++) {
+            for (c = 0; c < 3; c++) {
+              action(r, c);
+            }
+        }
+      }
+      
+      function newBoard(board) {
+        var result = [['', '', ''],['', '', ''],['', '', '']];
+        
+        if (board) {
+          iterateBoard(function(r,c) {
+            result[r][c] = board[r][c];              
+          });           
+        }
+      
+        return result;
+      }
+              
+      function newGame() {                            
+        function clearBoard() {          
+          iterateBoard(function(r,c) {
+            drawSymbol(r, c, 'none'); 
+          });                   
+        }                       
+            
+        board = newBoard();
+        startingPlayer = Math.random() > 0.5 ? human : cpu;               
+        
+        clearBoard();               
+                
+        if (startingPlayer === cpu) {          
+          makeMove(findBestMove(cpu, board, 1).move);          
+        }
+        
+        markTurn(human);        
+      }
+                           
+      function getBoardElement(row, col) {
+        return document.getElementById('c' + row.toString() + col.toString());
+      }
+      
+      function drawSymbol(row, col, symbol) {
+          var el = getBoardElement(row, col);
+          el.className = symbol;      
+      }
+      
+      function showEndOfGame(msg, then) {
+        var elt = document.getElementById('finished');
+        elt.innerHTML = '<p>' + msg + '</p>';
+        elt.classList.add('show'); 
+        elt.onclick = function() {
+          elt.classList.remove('show');
+          then();          
+        };
+      }
+      
+      function markTurn(player) {               
+        document.getElementById('xPlayer').classList.remove('next');
+        document.getElementById('oPlayer').classList.remove('next');
+        
+        var playerEl = document.getElementById(player + 'Player');
+        playerEl.classList.add("next");        
+      }
+      
+      function drawScore(player, score) {
+        var playerEl = document.getElementById(player + 'Player');
+        var scoreEl = playerEl.getElementsByClassName('score')[0]
+        scoreEl.innerHTML = score;
+      }           
+      
+      function getMoves(board, player) {
+         var moves = [];
+         
+         iterateBoard(function(r,c) {
+            if (!board[r][c]) {
+                moves.push({
+                  player: player,
+                  row: r,
+                  col: c
+                });
+            }            
+         });
+                  
+         return moves;      
+      }
+      
+      function findBestMove(player, board, minmax, depth) {        
+		var moves;
+        var i;        
+        var bestMove = {};				
+		var badMoveProbability = 0;
+        depth = depth || 0;
+        
+        moves = getMoves(board, player);
+        
+        if (moves.length === 0)
+        {
+          return null;
+        }
+				
+		for(i = 0; i < moves.length; i++) {
+            var score = scoreMove(moves[i], board, minmax, depth);														
+			moves[i].score = score;						          
+        }
+							
+		if (depth === 0 && badMoveProbability > 0) {
+			moves.sort(function(m1,m2) {				
+				var compare = minmax * (m2.score - m1.score);				
+				if (Math.random() < badMoveProbability) {
+					return -compare;
+				}
+				
+				return compare;
+			});
+		} else {
+			moves.sort(function(m1,m2) {									
+				return minmax * (m2.score - m1.score);	// sort descending	
+			});
+		}
+        			
+        return moves[0];				
+      }
+      
+      function scoreMove(move, board, minmax, depth) {
+        board = newBoard(board);        
+        board[move.row][move.col] = move.player;        
+        
+        return evalBoard(move, board, minmax, depth);
+      }
+      
+      function evalBoard(lastMove, board, minmax, depth) {
+        var player;
+        var moves;
+        var i;        
+        var bestMove;   		
+        
+        if (isWinningMove(lastMove, board)) {                     
+          var score = lastMove.player === cpu 
+            ? (2 - depth * 0.01) : - (2 - depth * 0.01);
+			
+		  return score;
+        }
+        
+        player = lastMove.player === human ? cpu : human;
+        bestMove = findBestMove(player, board, -minmax, depth + 1);
+        
+        return bestMove ? bestMove.score : 0;        
+      }
+      
+       function isWinningMove(move, board) {                                         
+          function checkRow() {
+            return board[move.row][0] && 
+              (board[move.row][0] === board[move.row][1]) && 
+              (board[move.row][1] === board[move.row][2]);            
+          }
+          
+          function checkColumn() {
+            return board[0][move.col] && 
+              (board[0][move.col] === board[1][move.col]) && 
+              (board[1][move.col] === board[2][move.col]);                       
+          }
+          
+          function checkDiagonal() {            
+            return board[1][1] && (
+              ((board[0][0] === board[1][1]) && (board[1][1] === board[2][2])) ||
+              ((board[0][2] === board[1][1]) && (board[1][1] === board[2][0])));                                          
+          }
+          
+          return checkRow() || checkColumn() || checkDiagonal();      
+      }      
+      
+      function checkIfGameIsFinishedAndUpdateScore(lastMove) {                     
+        if (isWinningMove(lastMove, board)) {                 
+          score[lastMove.player]++;    
+          drawScore(lastMove.player, score[lastMove.player]);  
+          return lastMove.player + ' has won!';  
+        }
+        
+        if (getMoves(board).length === 0) {
+          return 'It\'s a tie!';          
+        }      
+        
+        return null;
+      }
+      
+      function makeMove(move) {                                               
+        board[move.row][move.col] = move.player;
+        drawSymbol(move.row, move.col, move.player);                 
+      }
+
+      function onBoardClick(row, col) {
+        return function() {                
+          var move;          
+          var msg;
+          
+          if (board[row][col]) {                                              
+            return;
+          }
+          
+          move = {player: human, row: row, col: col};                            
+          makeMove(move);
+          
+          if (msg = checkIfGameIsFinishedAndUpdateScore(move)) {
+            showEndOfGame(msg, newGame);
+          }
+          else {
+            move = findBestMove(cpu, board, 1);
+            makeMove(move);
+            if (msg = checkIfGameIsFinishedAndUpdateScore(move)) {
+              showEndOfGame(msg, newGame);
+            }
+          }                                                              
+        };     
+      };
+      
+      function init() {                
+        iterateBoard(function(r,c) {
+          var el = getBoardElement(r, c);          
+          el.onclick = onBoardClick(r,c);
+        });        
+        
+        score[human] = 0;
+        score[cpu] = 0;
+        drawScore(human, 0);
+        drawScore(cpu, 0);
+        
+        newGame();               
+      }
+      
+      init();      
+     
+  })();
+  
+</script>
+
+</body>
+</html>
