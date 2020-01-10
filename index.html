@@ -199,7 +199,7 @@
         clearBoard();               
                 
         if (startingPlayer === cpu) {          
-          makeMove(findBestMove(cpu, board, 1).move);          
+          makeMove(findBestMove(cpu, board, 1));          
         }
         
         markTurn(human);        
