@@ -21,7 +21,7 @@
 
     .next {
       font-weight: bold;
-      border-bottom: 2px solid #e4ff00;
+      background-color: #666;
     }
 
     #finished {
@@ -55,13 +55,26 @@
     #stats {
       position: absolute;
       left: 50%;
-      bottom: 40px;
-      margin-left: -75px;
+      bottom: 100px;
+      margin-left: -225px;
       background-color: #333;
       border: 3px solid #444;
       padding: 20px;
-      font-size: 1.5em;
-      width: 150px;
+      font-size: 1.5em;      
+      width: 450px;
+      border-collapse: collapse;
+      text-transform: uppercase;    
+    }  
+
+    #stats td {
+      border: 3px solid #444;   
+      text-align: center;   
+      padding: 10px;
+    }  
+
+    #level-label {
+      color:#ffba00;
+      cursor: pointer;
     }
 
     #wrapper {
@@ -92,18 +105,16 @@
       background-color: #333;
     }
 
-    .score {
-      padding-left: 10px;
+    #xPlayer {      
+      color: #ffba00;      
     }
 
-    #xPlayer {
-      float: left;
-      color: #ffba00;
+    #oPlayer {      
+      color: #ff4e00;      
     }
 
-    #oPlayer {
-      float: right;
-      color: #ff4e00;
+    #level {      
+      color: #fff;        
     }
 
     td.x::after {
@@ -127,12 +138,17 @@
 <body>
 
   <div id="finished">
-  </div>
+  </div>  
 
-  <div id="stats">
-    <p id="xPlayer">X: <span class="score" /></p>
-    <p id="oPlayer">O: <span class="score" /></p>
-  </div>
+  <table id="stats">
+    <tbody>
+      <tr>
+        <td id="xPlayer">You: <span class="score"></span></td>
+        <td id="oPlayer">Cpu: <span class="score"></span></td>
+        <td id="level">LEVEL: <span id="level-label">EASY</span></td>                
+      </tr>
+    </tbody>    
+  </table>
 
   <div id="wrapper">
     <table id="board">
@@ -161,10 +177,26 @@
 
       var human = 'x';
       var cpu = 'o';
+      
+      var levels = [
+        {
+          label: 'easy',
+          bmp: 0.1
+        },
+        {
+          label: 'medium',
+          bmp: 0.05
+        },
+        {
+          label: 'hard',
+          bmp: 0
+        }       
+      ];
 
       var score = {};
       var board;
       var startingPlayer;
+      var level = 2;
 
       function iterateBoard(action) {
         var r, c;
@@ -239,6 +271,16 @@
         scoreEl.innerHTML = score;
       }
 
+      function changeLevel() {                        
+        var levelElt = document.getElementById("level-label");
+        levelElt.innerHTML = levels[level].label;
+
+        levelElt.onclick = function() {
+            level = (level + 1) % levels.length;            
+            levelElt.innerHTML = levels[level].label;            
+        };
+      }
+
       function getMoves(board, player) {
         var moves = [];
 
@@ -259,7 +301,7 @@
         var moves;
         var i;
         var bestMove = {};
-        var badMoveProbability = 0;
+        var badMoveProbability = levels[level].bmp;
 
         depth = depth || 0;
 
@@ -394,6 +436,7 @@
         score[cpu] = 0;
         drawScore(human, 0);
         drawScore(cpu, 0);
+        changeLevel();
 
         newGame();
       }
